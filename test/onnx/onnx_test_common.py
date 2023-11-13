@@ -375,7 +375,9 @@ def run_ort(
             f"Expected {len(input_names)} inputs, got {len(pytorch_inputs)}"
         )
 
-    ort_input = {k: v.cpu().numpy() for k, v in zip(input_names, pytorch_inputs)}
+    ort_input = {
+        k: v.detach().cpu().numpy() for k, v in zip(input_names, pytorch_inputs)
+    }
     return session.run(None, ort_input)
 
 
@@ -430,11 +432,13 @@ def _compare_pytorch_onnx_with_ort(
         ort_outputs = onnx_program(*input_args, **input_kwargs)
     else:
         ort_outputs = run_ort(onnx_program, onnx_format_args)
+    ort_outputs = onnx_program.adapt_onnx_outputs_to_torch(ort_outputs)
 
     if len(ref_outputs) != len(ort_outputs):
         raise AssertionError(
             f"Expected {len(ref_outputs)} outputs, got {len(ort_outputs)}"
         )
+
     for ref_output, ort_output in zip(ref_outputs, ort_outputs):
         torch.testing.assert_close(
             ref_output, torch.tensor(ort_output), rtol=rtol, atol=atol
