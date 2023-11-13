@@ -768,6 +768,15 @@ class FullyShardedDataParallel(nn.Module, _FSDPState):
                     state_dict_config=submodule._state_dict_config,
                     optim_state_dict_config=submodule._optim_state_dict_config,
                 )
+
+                # If device_mesh is passed in when initalizing FSDP, we automatically turn the
+                # _use_dtensor flag to be true for ShardedOptimStateDictConfig().
+                if (
+                    getattr(submodule, "device_mesh", None)
+                    and state_dict_settings.state_dict_type
+                    == StateDictType.SHARDED_STATE_DICT
+                ):
+                    state_dict_settings.optim_state_dict_config._use_dtensor = True
             else:
                 submodule_settings = StateDictSettings(
                     submodule._state_dict_type,
@@ -779,14 +788,14 @@ class FullyShardedDataParallel(nn.Module, _FSDPState):
                     f"Got {submodule_settings} and {state_dict_settings}."
                 )
 
-            # If device_mesh is passed in when initalizing FSDP, we automatically turn the
-            # _use_dtensor flag to be true for ShardedOptimStateDictConfig().
-            if (
-                getattr(module, "device_mesh", None)
-                and state_dict_settings.state_dict_type
-                == StateDictType.SHARDED_STATE_DICT
-            ):
-                state_dict_settings.optim_state_dict_config._use_dtensor = True
+                # If device_mesh is passed in when initalizing FSDP, we automatically turn the
+                # _use_dtensor flag to be true for ShardedOptimStateDictConfig().
+                if (
+                    getattr(submodule, "device_mesh", None)
+                    and submodule_settings.state_dict_type
+                    == StateDictType.SHARDED_STATE_DICT
+                ):
+                    submodule_settings.optim_state_dict_config._use_dtensor = True
         return state_dict_settings
 
     @staticmethod
