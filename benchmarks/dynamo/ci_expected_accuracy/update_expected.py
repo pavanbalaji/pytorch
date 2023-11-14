@@ -65,7 +65,10 @@ S3_BASE_URL = "https://gha-artifacts.s3.amazonaws.com"
 def get_artifacts_urls(results, suites):
     urls = {}
     for r in results:
-        if "inductor" == r["workflowName"] and "test" in r["jobName"]:
+        if (
+            r["workflowName"] in ("inductor", "inductor-periodic")
+            and "test" in r["jobName"]
+        ):
             config_str, test_str = parse_job_name(r["jobName"])
             suite, shard_id, num_shards, machine, *_ = parse_test_str(test_str)
             workflowId = r["workflowId"]
@@ -141,13 +144,22 @@ if __name__ == "__main__":
 
     repo = "pytorch/pytorch"
     suites = {
+        "aot_eager_huggingface",
         "aot_inductor_huggingface",
+        "dynamic_aot_eager_huggingface",
+        "dynamo_eager_huggingface",
         "inductor_huggingface",
         "dynamic_inductor_huggingface",
+        "aot_eager_timm",
         "aot_inductor_timm",
+        "dynamic_aot_eager_timm",
+        "dynamo_eager_timm",
         "inductor_timm",
         "dynamic_inductor_timm",
+        "aot_eager_torchbench",
         "aot_inductor_torchbench",
+        "dynamic_aot_eager_torchbench",
+        "dynamo_eager_torchbench",
         "inductor_torchbench",
         "dynamic_inductor_torchbench",
     }
